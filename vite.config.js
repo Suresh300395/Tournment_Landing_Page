@@ -11,6 +11,7 @@ export default defineConfig({
   preview: {
     allowedHosts: [
       'tournament.adityauniversity.in',
+      'https://tournament.adityauniversity.in',
       'www.tournament.adityauniversity.in'
     ]
   }
