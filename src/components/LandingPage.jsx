@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { Box, Button } from '@mui/material'
 import ArrowRightIcon from '@mui/icons-material/ArrowRight'
 
-const adityaLogo = '/Aditya University White Logo.png'
+// Use 30KB WebP for instant loading instead of 685KB PNG
+const adityaLogo = '/Aditya University White Logo.webp'
 const aiuLogo = '/AIU_Logo.webp'
 const landscapeBg = '/Lanscape_2.webp'
 const portraitBg = '/Potrait_1.webp'
@@ -11,23 +12,94 @@ function LandingPage({
   targetUrl = import.meta.env.VITE_CHESS_MEN || import.meta.env.CHESS_MEN,
 }) {
   const [isExiting, setIsExiting] = useState(false)
+  const [pageReady, setPageReady] = useState(false)
+  const [adityaLoaded, setAdityaLoaded] = useState(false)
+  const [aiuLoaded, setAiuLoaded] = useState(false)
 
   const handleExploreClick = (e) => {
     e.preventDefault()
     setIsExiting(true)
     setTimeout(() => {
       window.location.href = targetUrl
-    }, 550)
+    }, 450)
+  }
+
+  // Pre-warm the target chess tournament page
+  useEffect(() => {
+    if (!targetUrl) return
+    try {
+      const link = document.createElement('link')
+      link.rel = 'prefetch'
+      link.href = targetUrl
+      document.head.appendChild(link)
+      return () => {
+        try {
+          document.head.removeChild(link)
+        } catch {
+          // ignore
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [targetUrl])
+
+  const prefetchTarget = () => {
+    if (!targetUrl) return
+    try {
+      if (!document.querySelector(`link[href="${targetUrl}"]`)) {
+        const link = document.createElement('link')
+        link.rel = 'prefetch'
+        link.href = targetUrl
+        document.head.appendChild(link)
+      }
+    } catch {
+      // ignore
+    }
   }
 
   useEffect(() => {
+    // Determine active background based on screen orientation
+    const isPortrait = window.matchMedia('(orientation: portrait)').matches
+    const activeBg = isPortrait ? portraitBg : landscapeBg
+
+    const imagesToPreload = [activeBg, adityaLogo, aiuLogo]
+    let loadedCount = 0
+    let isMounted = true
+
+    const markImageReady = () => {
+      loadedCount += 1
+      if (loadedCount >= imagesToPreload.length && isMounted) {
+        setPageReady(true)
+      }
+    }
+
+    imagesToPreload.forEach((src) => {
+      const img = new Image()
+      img.src = src
+      if (img.complete) {
+        markImageReady()
+      } else {
+        img.onload = markImageReady
+        img.onerror = markImageReady
+      }
+    })
+
+    // Fallback: smooth reveal after max 250ms so user is never kept waiting
+    const timer = setTimeout(() => {
+      if (isMounted) setPageReady(true)
+    }, 250)
+
     // Reset slide-up animation if navigating back via browser history
     const handlePageShow = () => {
       setIsExiting(false)
+      setPageReady(true)
     }
 
     window.addEventListener('pageshow', handlePageShow)
     return () => {
+      isMounted = false
+      clearTimeout(timer)
       window.removeEventListener('pageshow', handlePageShow)
     }
   }, [])
@@ -48,10 +120,12 @@ function LandingPage({
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundColor: '#030712',
-        transition: 'transform 0.55s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.45s ease',
-        willChange: 'transform',
+        willChange: 'transform, opacity',
         transform: isExiting ? 'translateY(-100vh)' : 'translateY(0)',
-        opacity: isExiting ? 0.85 : 1,
+        opacity: isExiting ? 0.85 : pageReady ? 1 : 0,
+        transition: isExiting
+          ? 'transform 0.55s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.45s ease'
+          : 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
         overflow: 'hidden',
       }}
     >
@@ -67,6 +141,10 @@ function LandingPage({
             xs: 'clamp(18px, 4vw, 28px) clamp(16px, 4vw, 24px) 10px',
             md: 'clamp(25px, 4vw, 45px) 20px 15px',
           },
+          opacity: pageReady ? 1 : 0,
+          transform: pageReady ? 'translateY(0)' : 'translateY(-10px)',
+          transition:
+            'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.08s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.08s',
         }}
       >
         <Box
@@ -82,6 +160,7 @@ function LandingPage({
             component="img"
             src={adityaLogo}
             alt="Aditya University Logo"
+            onLoad={() => setAdityaLoaded(true)}
             sx={{
               height: {
                 xs: 'clamp(60px, 15vw, 85px)',
@@ -90,6 +169,8 @@ function LandingPage({
               width: 'auto',
               objectFit: 'contain',
               filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5))',
+              opacity: adityaLoaded ? 1 : 0,
+              transition: 'opacity 0.4s ease',
             }}
           />
 
@@ -100,6 +181,8 @@ function LandingPage({
               height: 'clamp(65px, 8vw, 95px)',
               backgroundColor: 'rgba(255, 255, 255, 0.65)',
               borderRadius: '1px',
+              opacity: adityaLoaded || aiuLoaded ? 1 : 0,
+              transition: 'opacity 0.4s ease',
             }}
           />
 
@@ -107,6 +190,7 @@ function LandingPage({
             component="img"
             src={aiuLogo}
             alt="AIU Logo"
+            onLoad={() => setAiuLoaded(true)}
             sx={{
               height: {
                 xs: 'clamp(72px, 18vw, 105px)',
@@ -115,6 +199,8 @@ function LandingPage({
               width: 'auto',
               objectFit: 'contain',
               filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5))',
+              opacity: aiuLoaded ? 1 : 0,
+              transition: 'opacity 0.4s ease',
             }}
           />
         </Box>
@@ -135,12 +221,18 @@ function LandingPage({
             xs: '15px 15px 35px',
             md: '20px 20px clamp(35px, 6vh, 65px)',
           },
+          opacity: pageReady ? 1 : 0,
+          transform: pageReady ? 'translateY(0)' : 'translateY(12px)',
+          transition:
+            'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.16s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.16s',
         }}
       >
         <Button
           component="a"
           href={targetUrl}
           onClick={handleExploreClick}
+          onMouseEnter={prefetchTarget}
+          onTouchStart={prefetchTarget}
           variant="outlined"
           disableRipple={false}
           endIcon={
@@ -222,4 +314,3 @@ function LandingPage({
 }
 
 export default LandingPage
-

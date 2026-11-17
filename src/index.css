@@ -30,3 +30,41 @@ body {
   min-height: 100vh;
   width: 100%;
 }
+
+/* Pre-React Initial Loader to avoid any blank black screen */
+.initial-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #030712;
+  background-image: url('/Lanscape_2.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+@media (orientation: portrait) {
+  .initial-loader {
+    background-image: url('/Potrait_1.webp');
+  }
+}
+
+.loader-spinner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(212, 159, 87, 0.2);
+  border-top-color: #d49f57;
+  animation: spinner-rotate 0.8s linear infinite;
+}
+
+@keyframes spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

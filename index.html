@@ -5,11 +5,43 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AUS Tournament</title>
+
+    <!-- Preload critical images to prevent initial black screen and ensure instant smooth load -->
+    <link
+      rel="preload"
+      as="image"
+      href="/Lanscape_2.webp"
+      media="(orientation: landscape)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="/Potrait_1.webp"
+      media="(orientation: portrait)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="/Aditya University White Logo.webp"
+      fetchpriority="high"
+    />
+    <link rel="preload" as="image" href="/AIU_Logo.webp" fetchpriority="high" />
+
     <link rel="preconnect" href="https://fonts.cdnfonts.com" />
     <link href="https://fonts.cdnfonts.com/css/google-sans" rel="stylesheet" />
+
+    <!-- Preconnect to tournament app for instant transition -->
+    <link rel="preconnect" href="http://localhost:3331" />
+    <link rel="dns-prefetch" href="http://localhost:3331" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="initial-loader">
+        <div class="loader-spinner"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
